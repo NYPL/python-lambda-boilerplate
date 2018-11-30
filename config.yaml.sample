@@ -1,0 +1,36 @@
+region: us-east-1
+
+function_name:
+handler: service.handler
+description:
+runtime: python3.6
+role:
+
+# if access key and secret are left blank, boto will use the credentials
+# defined in the [default] section of ~/.aws/credentials.
+aws_access_key_id:
+aws_secret_access_key:
+
+# dist_directory: dist
+timeout: 30
+memory_size: 128
+
+# If tags are used they will overwrite all existing tags at deployment time
+#tags:
+# example: tag
+
+# Build options
+build:
+  source_directories: lib, helpers
+
+# Environment Variables
+# Any variables set here will be carried across all environments, unless
+# specifically overridden elsewhere. To set specific variables (for dev/qa/prod)
+# modify the individual .yaml files in the config directory
+# NOTE: The surrounding === comments enable the replacing and must be kept in
+# the file
+# === START_ENV_VARIABLES ===
+environment_variables:
+  ENV: development
+  LOG_LEVEL: info
+# === END_ENV_VARIABLES ===
