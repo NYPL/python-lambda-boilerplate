@@ -19,15 +19,14 @@ help:
 	@echo "make link"
 	@echo "    lint package with flake8"
 
-ENV=development
 deploy:
-	python3 scripts/lambda-run.py ENV
+	python3 -m scripts.lambdaRun $(ENV)
 
 run-local:
-	python3 scripts/lambda-run.py run-local
+	python3 -m scripts.lambdaRun run-local
 
 build:
-	python3 scripts/lambda-run.py build
+	python3 -m scripts.lambdaRun build-$(ENV)
 
 test:
 	coverage3 run -m unittest

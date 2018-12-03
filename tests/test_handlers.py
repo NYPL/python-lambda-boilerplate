@@ -1,7 +1,7 @@
 import unittest
 
 from service import handler
-from helpers.errorHelpers import NoRecordsRecieved
+from helpers.errorHelpers import NoRecordsReceived
 
 
 class TestHandler(unittest.TestCase):
@@ -27,9 +27,9 @@ class TestHandler(unittest.TestCase):
         }
         try:
             handler(testRec, None)
-        except NoRecordsRecieved:
+        except NoRecordsReceived:
             pass
-        self.assertRaises(NoRecordsRecieved)
+        self.assertRaises(NoRecordsReceived)
 
     def test_records_none(self):
         testRec = {
@@ -37,9 +37,9 @@ class TestHandler(unittest.TestCase):
         }
         try:
             handler(testRec, None)
-        except NoRecordsRecieved:
+        except NoRecordsReceived:
             pass
-        self.assertRaises(NoRecordsRecieved)
+        self.assertRaises(NoRecordsReceived)
 
 
 if __name__ == '__main__':

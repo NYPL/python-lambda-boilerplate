@@ -1,4 +1,4 @@
-from helpers.errorHelpers import NoRecordsRecieved
+from helpers.errorHelpers import NoRecordsReceived
 from helpers.logHelpers import createLog
 
 # Logger can be passed name of current module
@@ -14,10 +14,10 @@ def handler(event, context):
 
     if records is None:
         logger.error('Records block is missing in Kinesis Event')
-        raise NoRecordsRecieved('Records block missing', event)
+        raise NoRecordsReceived('Records block missing', event)
     elif len(records) < 1:
         logger.error('Records block contains no records')
-        raise NoRecordsRecieved('Records block empty', event)
+        raise NoRecordsReceived('Records block empty', event)
 
     # Method to be invoked goes here
     # TODO Implement oauth checking

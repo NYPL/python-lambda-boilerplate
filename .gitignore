@@ -2,4 +2,5 @@
 dist/
 htmlcov/
 __pycache__/
+*.pyc
 .coverage
