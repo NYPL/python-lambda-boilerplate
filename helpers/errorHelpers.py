@@ -4,6 +4,7 @@ class NoRecordsReceived(Exception):
         self.message = message
         self.invocation = invocation
 
+
 class InvalidExecutionType(Exception):
     def __init__(self, message):
         self.message = message

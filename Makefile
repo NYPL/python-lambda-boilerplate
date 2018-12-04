@@ -10,13 +10,13 @@ help:
 	@echo "make run-local"
 	@echo "    invoke python-lambda's local test environement"
 	@echo "    uses the development environemnt variables and the events in event.json"
-	@echo "make build"
+	@echo "make build-ENV"
 	@echo "    package the lambda for upload to AWS. Puts output in dist/"
 	@echo "make test"
 	@echo "    runs unittests defined in tests/ directory"
 	@echo "make coverage-report"
 	@echo "    display report on test coverage"
-	@echo "make link"
+	@echo "make lint"
 	@echo "    lint package with flake8"
 
 deploy:

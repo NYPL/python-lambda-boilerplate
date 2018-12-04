@@ -43,7 +43,7 @@ To deploy the Lambda be sure that you have completed the setup steps above and h
 To run the deployment run `make deply ENV=[environment]` where environment is one of development/qa/production
 
 ## Tests
-The stock pythin unittest is currently used to provide test coverage and can be run with `make test`
+The stock python unittest is currently used to provide test coverage and can be run with `make test`
 
 Coverage is used to measure test coverage and a report can be seen by running `make coverage-report`
 

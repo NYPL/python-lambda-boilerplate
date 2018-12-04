@@ -28,7 +28,7 @@ def createLog(module):
         logger.setLevel(levels['warning'])
         consoleLog.setLevel(levels['warning'])
 
-    formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s: %(message)s')
+    formatter = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s: %(message)s')  # noqa: E501
     consoleLog.setFormatter(formatter)
 
     logger.addHandler(consoleLog)

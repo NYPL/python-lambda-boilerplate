@@ -4,6 +4,7 @@ import os
 
 from helpers.logHelpers import createLog
 
+
 class TestLogger(unittest.TestCase):
 
     def test_log_default(self):
@@ -11,7 +12,6 @@ class TestLogger(unittest.TestCase):
         logger = createLog('tester')
         level = logger.getEffectiveLevel()
         self.assertEqual(level, logging.WARNING)
-
 
     def test_log_debug(self):
 

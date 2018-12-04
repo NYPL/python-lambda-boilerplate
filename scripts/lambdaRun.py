@@ -20,7 +20,12 @@ logger = createLog('runScripts')
 # H/T to Paul Beaudoin for the inspiration
 
 
-def main(runType):
+def main():
+
+    if len(sys.argv) != 2:
+        logger.warning('This script takes one, and only one, argument!')
+        sys.exit(1)
+    runType = sys.argv[1]
 
     if re.match(r'^(?:development|qa|production)', runType):
         logger.info('Deploying lambda to {} environment'.format(runType))
@@ -49,10 +54,9 @@ def main(runType):
         ])
         os.remove('run_config.yaml')
 
-
     elif re.match(r'^build-(?:development|qa|production)', runType):
         env = runType.replace('build-', '')
-        logger.info("Building package for {} environment, will be in dist/".format(env))
+        logger.info('Building package for {} environment, will be in dist/'.format(env))  # noqa: E501
         setEnvVars(env)
         subprocess.run([
             'lambda',
@@ -65,14 +69,14 @@ def main(runType):
         os.remove('run_config.yaml')
 
     else:
-        logger.error("Execution type not recognized! {}".format(runType))
-        raise InvalidExecutionType("{} is not a valid command".format(runType))
+        logger.error('Execution type not recognized! {}'.format(runType))
+        raise InvalidExecutionType('{} is not a valid command'.format(runType))
 
 
 def setEnvVars(runType):
 
     # Load env variables from relevant .yaml file
-    envDict = loadEnvFile(runType, 'config/{}.yaml')
+    envDict, envLines = loadEnvFile(runType, 'config/{}.yaml')
 
     # If no environemnt variables are set, do nothing to config
     if 'environment_variables' not in envDict:
@@ -80,10 +84,7 @@ def setEnvVars(runType):
         return
 
     # Overwrite/add any vars in the core config.yaml file
-    configDict = loadEnvFile(runType, None)
-
-    with open('config.yaml', 'r') as configStream:
-        configLines = configStream.readlines()
+    configDict, configLines = loadEnvFile(runType, None)
 
     envVars = configDict['environment_variables']
     for key, value in envDict['environment_variables'].items():
@@ -108,17 +109,19 @@ def setEnvVars(runType):
 
                 if line.strip() == '# === START_ENV_VARIABLES ===':
                     write = False
+
     except IOError as err:
-        logger.error('Script lacks necessary permissions, ensure user has permission to write to directory')
+        logger.error(('Script lacks necessary permissions, '
+                      'ensure user has permission to write to directory'))
         raise err
 
 
 def createEventMapping(runType):
     logger.info('Creating event Source mappings for Lambda')
     try:
-        with open('config/event_sources_{}.json'.format(runType)) as envSources:
+        with open('config/event_sources_{}.json'.format(runType)) as sources:
             try:
-                eventMappings = json.load(envSources)
+                eventMappings = json.load(sources)
             except json.decoder.JSONDecodeError as err:
                 logger.error('Unable to parse JSON file')
                 raise err
@@ -126,16 +129,17 @@ def createEventMapping(runType):
         logger.error('Unable to open JSON file')
         raise err
 
-    if len(eventMappings) < 1:
+    if len(eventMappings['EventSourceMappings']) < 1:
         logger.info('No event sources defined')
         return
 
-    configDict = loadEnvFile(runType, None)
+    configDict, configLines = loadEnvFile(runType, None)
 
     lambdaClient = createAWSClient(configDict)
 
-    for mapping in eventMappings["EventSourceMappings"]:
+    for mapping in eventMappings['EventSourceMappings']:
         logger.debug('Adding event source mapping for function')
+
         createKwargs = {
             'EventSourceArn': mapping['EventSourceArn'],
             'FunctionName': configDict['function_name'],
@@ -143,8 +147,10 @@ def createEventMapping(runType):
             'BatchSize': mapping['BatchSize'],
             'StartingPosition': mapping['StartingPosition']
         }
-        if mapping['StartingPosition'] == 'AT_LATEST':
-            createKwargs['StartingPositionTimestamp'] = mapping['StartingPositionTimestamp']
+
+        if mapping['StartingPosition'] == 'AT_TIMESTAMP':
+            createKwargs['StartingPositionTimestamp'] = mapping['StartingPositionTimestamp']  # noqa: E501
+
         lambdaClient.create_event_source_mapping(**createKwargs)
 
 
@@ -154,9 +160,13 @@ def createAWSClient(configDict):
         'region_name': configDict['region']
     }
 
-    if 'aws_access_key_id' in configDict and configDict['aws_access_key_id'] is not None:
+    if (
+        'aws_access_key_id' in configDict
+        and
+        configDict['aws_access_key_id'] is not None
+    ):
         clientKwargs['aws_access_key_id'] = configDict['aws_access_key_id']
-        clientKwargs['aws_secret_access_key'] = configDict['aws_secret_access_key']
+        clientKwargs['aws_secret_access_key'] = configDict['aws_secret_access_key']  # noqa: E501
 
     lambdaClient = boto3.client(
         'lambda',
@@ -172,6 +182,7 @@ def loadEnvFile(runType, fileString):
         openFile = fileString.format(runType)
     else:
         openFile = 'config.yaml'
+
     try:
         with open(openFile) as envStream:
             try:
@@ -179,19 +190,18 @@ def loadEnvFile(runType, fileString):
             except yaml.YAMLError as err:
                 logger.error('{} Invalid! Please review'.format(openFile))
                 raise err
+
+            envStream.seek(0)
+            fileLines = envStream.readlines()
+
     except FileNotFoundError as err:
         logger.error('Missing config YAML file! Check directory')
         raise err
 
     if envDict is None:
         envDict = {}
-    return envDict
+    return envDict, fileLines
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        logger.warning('This script takes one, and only one, argument!')
-        sys.exit(1)
-
-    runType = sys.argv[1]
-    main(runType)
+    main()
