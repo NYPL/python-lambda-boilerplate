@@ -1,11 +1,9 @@
 language: python
 cache: pip
 python:
-- '3.3'
-- '3.4'
-- '3.5'
 - '3.6'
-install: sudo pip install -r requirements.txt
+install:
+- pip install --user -r requirements.txt
 script: python3 -m unittest
 after_success:
 - ENVIRONMENT_NAME=$TRAVIS_BRANCH
