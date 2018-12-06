@@ -1,9 +1,21 @@
 language: python
+cache: pip
 python:
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7"
-install: pip install -r requirements.txt
+- '3.3'
+- '3.4'
+- '3.5'
+- '3.6'
+install: sudo pip install -r requirements.txt
 script: make test
+after_success:
+- ENVIRONMENT_NAME=$TRAVIS_BRANCH
+- if [ "$TRAVIS_BRANCH" == "master" ]; then ENVIRONMENT_NAME=productionl; fi
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: make deploy ENV=$ENVIORNMENT_NAME
+  on:
+    branch: development
+env:
+  global:
+    secure: sVS6oyUalgoJRKXn1+bACIStqfDhZFNZmCvoyzS43L6MGWl9jq4fhnzlHKcBrGbjY4zey9j8IOU94aVhcHraCTCw3mzidoq9K8hKEq6vE/2GjcrMoEhJ7F+49Y4H0tq3+Y7XdXQaUK2rYp83wLFhzcAlhOtydvgEHefX2RVHuGLKbirRP0IAkuKIJW/zTNlI9vZpdQHNNrbjnE71xu4fuEHH7K2ud9RtN4fPthHnF6g1bx7mVbQ/33q7JSxPDSyaCyAE6IKKM8f1tU/yAuM2C8XcNNU/RE50MWMJmy1utQzIhUqkQTHbo0NcF6rL1LfQDhgvngjBndl54A8e+obftnJ4NnRDypWFt+WFmRpiTx+o9uTwYoFKrIXuQeUypvhoUIW/Q5+odiLmaZ0MKZSO8POncldJBLiPWMtxfmtStG0j0S14osPrxIxsJVf3tqJKDDNwFOCE6JuncMgzFH0UczMcIkzjEYywxAaqvfqq+iEysNCOSP+HS+hVmmEeXzM+mamVmtfT8TSEipze4Cv/C7aNt7siFKvIOycRn1ORIwv+YGrwMldcavrOlMSNIjtKI+O4FmamIrkwFG+85X0RKedcBQc+7UvmvfHyBIA3sNrXkS3xtlO5BlJU1c48T8Pay/1T2rka8eUaNeDyjAjTIapLEzxuRtEfeyc/dp385NQ=
