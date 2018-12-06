@@ -1,11 +1,10 @@
 language: python
 python:
-  - '3.6'
+  - 3.5
+  - 3.6
 install:
-  - sudo pip install --upgrade pip
-  - sudo pip install coveralls coverage pyyaml
-  - sudo pip install -r requirements.txt
-script: python3 -m unittest
+  - pip install -r requirements.txt
+script: make test
 after_success:
   - ENVIRONMENT_NAME=$TRAVIS_BRANCH
   - if [ "$TRAVIS_BRANCH" == "master" ]; then ENVIRONMENT_NAME=productionl; fi
