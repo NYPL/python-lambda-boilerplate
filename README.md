@@ -1,15 +1,15 @@
 # Python Lambda Boilerplate
-A simple boilerplate/starter for creating AWS Lambdas in python (python3.3+). This relies on the [python-lambda] module for deployment and managing environment variables. It allows you to run local tests and automatically deploy code to AWS based on local variables
+A simple boilerplate/starter for creating AWS Lambdas in python (python3.3+). This relies on the [python-lambda](https://github.com/nficano/python-lambda) module for deployment and managing environment variables. It allows you to run local tests and automatically deploy code to AWS based on local variables. This was inspired and largely guided by the [node-lambda-boilerplate](https://github.com/nypl/node-lambda-boilerplate) repository
 
 ## Version
-v1.0.0
+v0.0.1
 
 ## Requirements
-Written in python3.7 (compatible back to 3.3)
+Python 3.3+ (written with Python 3.7)
 
 ## Features
 - Makefile to run basic commands for building/testing/deploying the Lambda
-- Contains unit test scaffoling in /tests
+- Contains unit test scaffolding in /tests
 - Includes linting via flake8
 - Contains logger and custom error message helpers in /helpers
 - Supports TravisCI
@@ -35,7 +35,7 @@ Uncomment the `environment_variable` blocks in the relevant config files (if nec
 Modify the included event.json to add to the Records block, which enables the Lambda to be tested locally
 
 ### Develop Locally
-To run your lambda locally run `make local-run` which will execute the Lambda(initially outputting "Hello, World")
+To run your lambda locally run `make local-run` which will execute the Lambda (initially outputting "Hello, World")
 
 ### Deploy the Lambda
 To deploy the Lambda be sure that you have completed the setup steps above and have tested your lambda, as well as configured any necessary environment variables.
