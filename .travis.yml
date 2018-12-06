@@ -1,17 +1,16 @@
 language: python
-cache: pip
 python:
-- '3.6'
+  - '3.6'
 install:
-- pip install --upgrade --user pip
-- pip install --user coveralls coverage pyyaml
-- pip install -r --user requirements.txt
+  - pip install --upgrade pip
+  - pip install coveralls coverage pyyaml
+  - pip install -r requirements.txt
 script: python3 -m unittest
 after_success:
-- ENVIRONMENT_NAME=$TRAVIS_BRANCH
-- if [ "$TRAVIS_BRANCH" == "master" ]; then ENVIRONMENT_NAME=productionl; fi
+  - ENVIRONMENT_NAME=$TRAVIS_BRANCH
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then ENVIRONMENT_NAME=productionl; fi
 deploy:
-- provider: script
+  - provider: script
   skip_cleanup: true
   script: make deploy ENV=$ENVIORNMENT_NAME
   on:
