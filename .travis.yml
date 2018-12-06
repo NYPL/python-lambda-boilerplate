@@ -3,9 +3,9 @@ cache: pip
 python:
 - '3.6'
 install:
-- sudo pip install --upgrade pip
-- sudo pip install coveralls coverage pyyaml
-- sudo pip install -r requirements.txt
+- pip install --upgrade --user pip
+- pip install --user coveralls coverage pyyaml
+- pip install -r --user requirements.txt
 script: python3 -m unittest
 after_success:
 - ENVIRONMENT_NAME=$TRAVIS_BRANCH
