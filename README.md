@@ -40,7 +40,7 @@ To run your lambda locally run `make local-run` which will execute the Lambda (i
 ### Deploy the Lambda
 To deploy the Lambda be sure that you have completed the setup steps above and have tested your lambda, as well as configured any necessary environment variables.
 
-To run the deployment run `make deply ENV=[environment]` where environment is one of development/qa/production
+To run the deployment run `make deploy ENV=[environment]` where environment is one of development/qa/production
 
 ## Tests
 The stock python unittest is currently used to provide test coverage and can be run with `make test`
