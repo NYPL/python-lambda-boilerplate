@@ -29,10 +29,10 @@ build:
 	python3 -m scripts.lambdaRun build-$(ENV)
 
 test:
-	coverage3 run -m unittest
+	coverage run -m unittest
 
 coverage-report:
-	coverage3 report -m
+	coverage report -m
 
 lint:
 	flake8
