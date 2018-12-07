@@ -11,8 +11,9 @@ script: make test
 after_success:
   - ENVIRONMENT_NAME=$TRAVIS_BRANCH
   - if [ "$TRAVIS_BRANCH" == "master" ]; then ENVIRONMENT_NAME=production; fi
-before_deply:
-  - echo "Passed all tests; Deploying to $ENVIRONMENT_NAME"
+before_deploy:
+  - echo "Passed all tests; Deploying to $ENVIRONMENT_NAME ($TRAVIS_BRANCH)"
+  - ENV=$ENVIRONMENT_NAME
 deploy:
   - provider: script
     skip_cleanup: true
