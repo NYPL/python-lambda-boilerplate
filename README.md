@@ -5,7 +5,7 @@ A simple boilerplate/starter for creating AWS Lambdas in python (python3.3+). Th
 v0.0.1
 
 ## Requirements
-Python 3.3+ (written with Python 3.7)
+Python 3.6+ (written with Python 3.7)
 
 ## Features
 - Makefile to run basic commands for building/testing/deploying the Lambda
