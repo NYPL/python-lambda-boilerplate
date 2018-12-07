@@ -10,11 +10,13 @@ before_script: cp config.yaml.sample config.yaml
 script: make test
 after_success:
   - ENVIRONMENT_NAME=$TRAVIS_BRANCH
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then ENVIRONMENT_NAME=productionl; fi
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then ENVIRONMENT_NAME=production; fi
+before_deply:
+  - echo "Passed all tests; Deploying to $ENVIRONMENT_NAME"
 deploy:
   - provider: script
     skip_cleanup: true
-    script: make deploy ENV=$ENVIORNMENT_NAME
+    script: "make deploy ENV=$ENVIORNMENT_NAME"
     on:
       branch: development
 env:
