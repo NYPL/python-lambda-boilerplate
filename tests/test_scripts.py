@@ -238,12 +238,20 @@ class TestScripts(unittest.TestCase):
         self.assertRaises(json.decoder.JSONDecodeError)
 
     @patch('builtins.open', side_effect=IOError)
-    def test_event_missing_err(self, mock_file):
+    def test_event_permissions_err(self, mock_file):
         try:
             createEventMapping('development')
         except IOError:
             pass
         self.assertRaises(IOError)
+
+    @patch('builtins.open', side_effect=FileNotFoundError)
+    def test_event_missing_err(self, mock_file):
+        try:
+            createEventMapping('development')
+        except FileNotFoundError:
+            pass
+        self.assertRaises(FileNotFoundError)
 
     @patch('scripts.lambdaRun.loadEnvFile')
     def test_empty_mapping_json_err(self, mock_env):
