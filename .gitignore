@@ -2,4 +2,6 @@
 dist/
 htmlcov/
 __pycache__/
+*.pyc
 .coverage
+setup.cfg

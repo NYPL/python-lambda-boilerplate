@@ -1,0 +1,10 @@
+{
+  "EventSourceMappings": [
+    {
+      "EventSourceArn": "source_arn",
+      "BatchSize": 100,
+      "StartingPosition": "LATEST|AT_TIMESTAMP|TRIM_HORIZON",
+      "Enabled": false
+    }
+  ]
+}

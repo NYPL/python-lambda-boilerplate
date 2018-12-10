@@ -1,15 +1,15 @@
 # Python Lambda Boilerplate
-A simple boilerplate/starter for creating AWS Lambdas in python (python3.3+). This relies on the [python-lambda] module for deployment and managing environment variables. It allows you to run local tests and automatically deploy code to AWS based on local variables
+A simple boilerplate/starter for creating AWS Lambdas in python (python3.3+). This relies on the [python-lambda](https://github.com/nficano/python-lambda) module for deployment and managing environment variables. It allows you to run local tests and automatically deploy code to AWS based on local variables. This was inspired and largely guided by the [node-lambda-boilerplate](https://github.com/nypl/node-lambda-boilerplate) repository
 
 ## Version
-v1.0.0
+v0.0.1
 
 ## Requirements
-Written in python3.7 (compatible back to 3.3)
+Python 3.6+ (written with Python 3.7)
 
 ## Features
 - Makefile to run basic commands for building/testing/deploying the Lambda
-- Contains unit test scaffoling in /tests
+- Contains unit test scaffolding in /tests
 - Includes linting via flake8
 - Contains logger and custom error message helpers in /helpers
 - Supports TravisCI
@@ -35,15 +35,18 @@ Uncomment the `environment_variable` blocks in the relevant config files (if nec
 Modify the included event.json to add to the Records block, which enables the Lambda to be tested locally
 
 ### Develop Locally
-To run your lambda locally run `make local-run` which will execute the Lambda(initially outputting "Hello, World")
+To run your lambda locally run `make local-run` which will execute the Lambda (initially outputting "Hello, World")
 
 ### Deploy the Lambda
 To deploy the Lambda be sure that you have completed the setup steps above and have tested your lambda, as well as configured any necessary environment variables.
 
-To run the deployment run `make deply ENV=[environment]` where environment is one of development/qa/production
+To run the deployment run `make deploy ENV=[environment]` where environment is one of development/qa/production
+
+**Deploy via TravisCI**
+Lambdas based on this code can also be deployed via TravisCI. To do uncomment the relevant lines in the .travis.yaml file and see the [NYPL General Engineering](https://github.com/NYPL/engineering-general/blob/master/standards/travis-ci.md#deploy) documentation for a guide on how to add the deploy step and *necessary* encrypted credentials
 
 ## Tests
-The stock pythin unittest is currently used to provide test coverage and can be run with `make test`
+The stock python unittest is currently used to provide test coverage and can be run with `make test`
 
 Coverage is used to measure test coverage and a report can be seen by running `make coverage-report`
 

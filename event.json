@@ -1,4 +1,6 @@
 {
     "source": "Kinesis",
-    "Records": []
+    "Records": [{
+        "jerry": "hello"
+      }]
 }
