@@ -42,6 +42,9 @@ To deploy the Lambda be sure that you have completed the setup steps above and h
 
 To run the deployment run `make deploy ENV=[environment]` where environment is one of development/qa/production
 
+**Deploy via TravisCI**
+Lambdas based on this code can also be deployed via TravisCI. To do uncomment the relevant lines in the .travis.yaml file and see the [NYPL General Engineering](https://github.com/NYPL/engineering-general/blob/master/standards/travis-ci.md#deploy) documentation for a guide on how to add the deploy step and *necessary* encrypted credentials
+
 ## Tests
 The stock python unittest is currently used to provide test coverage and can be run with `make test`
 
