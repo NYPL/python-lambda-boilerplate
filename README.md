@@ -2,7 +2,7 @@
 A simple boilerplate/starter for creating AWS Lambdas in python (python3.3+). This relies on the [python-lambda](https://github.com/nficano/python-lambda) module for deployment and managing environment variables. It allows you to run local tests and automatically deploy code to AWS based on local variables. This was inspired and largely guided by the [node-lambda-boilerplate](https://github.com/nypl/node-lambda-boilerplate) repository
 
 ## Version
-v0.0.1
+v0.0.2
 
 ## Requirements
 Python 3.6+ (written with Python 3.7)
