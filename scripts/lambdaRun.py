@@ -6,10 +6,10 @@ import re
 import yaml
 import json
 
-import boto3
-
 from helpers.logHelpers import createLog
 from helpers.errorHelpers import InvalidExecutionType
+from helpers.configHelpers import loadEnvFile
+from helpers.clientHelpers import createAWSClient
 
 logger = createLog('runScripts')
 
@@ -27,7 +27,7 @@ def main():
         sys.exit(1)
     runType = sys.argv[1]
 
-    if re.match(r'^(?:development|qa|production)', runType):
+    if re.match(r'^(?:local|development|qa|production)', runType):
         logger.info('Deploying lambda to {} environment'.format(runType))
         setEnvVars(runType)
         subprocess.run([
@@ -43,7 +43,7 @@ def main():
 
     elif re.match(r'^run-local', runType):
         logger.info('Running test locally with development environment')
-        env = 'development'
+        env = 'local'
         setEnvVars(env)
         subprocess.run([
             'lambda',
@@ -125,7 +125,7 @@ def createEventMapping(runType):
             except json.decoder.JSONDecodeError as err:
                 logger.error('Unable to parse JSON file')
                 raise err
-    except FileNotFoundError as err:
+    except FileNotFoundError:
         logger.info('No Event Source mapping provided')
         return
     except IOError as err:
@@ -138,7 +138,7 @@ def createEventMapping(runType):
 
     configDict, configLines = loadEnvFile(runType, None)
 
-    lambdaClient = createAWSClient(configDict)
+    lambdaClient = createAWSClient('lambda', configDict)
 
     for mapping in eventMappings['EventSourceMappings']:
         logger.debug('Adding event source mapping for function')
@@ -148,62 +148,38 @@ def createEventMapping(runType):
             'FunctionName': configDict['function_name'],
             'Enabled': mapping['Enabled'],
             'BatchSize': mapping['BatchSize'],
-            'StartingPosition': mapping['StartingPosition']
         }
 
-        if mapping['StartingPosition'] == 'AT_TIMESTAMP':
-            createKwargs['StartingPositionTimestamp'] = mapping['StartingPositionTimestamp']  # noqa: E501
+        if 'StartingPosition' in mapping:
+            createKwargs['StartingPosition'] = mapping['StartingPosition']
+            if mapping['StartingPosition'] == 'AT_TIMESTAMP':
+                createKwargs['StartingPositionTimestamp'] = mapping['StartingPositionTimestamp']  # noqa: E50
 
-        lambdaClient.create_event_source_mapping(**createKwargs)
+        try:
+            lambdaClient.create_event_source_mapping(**createKwargs)
+        except lambdaClient.exceptions.ResourceConflictException as err:
+            logger.info('Event Mapping already exists, update')
+            logger.debug(err)
+            updateEventMapping(lambdaClient, mapping, configDict)
 
 
-def createAWSClient(configDict):
+def updateEventMapping(client, mapping, configDict):
 
-    clientKwargs = {
-        'region_name': configDict['region']
+    listSourceKwargs = {
+        'EventSourceArn': mapping['EventSourceArn'],
+        'FunctionName': configDict['function_name'],
+        'MaxItems': 1
     }
+    sourceMappings = client.list_event_source_mappings(**listSourceKwargs)
+    mappingMeta = sourceMappings['EventSourceMappings'][0]
 
-    if (
-        'aws_access_key_id' in configDict
-        and
-        configDict['aws_access_key_id'] is not None
-    ):
-        clientKwargs['aws_access_key_id'] = configDict['aws_access_key_id']
-        clientKwargs['aws_secret_access_key'] = configDict['aws_secret_access_key']  # noqa: E501
-
-    lambdaClient = boto3.client(
-        'lambda',
-        **clientKwargs
-    )
-
-    return lambdaClient
-
-
-def loadEnvFile(runType, fileString):
-
-    if fileString:
-        openFile = fileString.format(runType)
-    else:
-        openFile = 'config.yaml'
-
-    try:
-        with open(openFile) as envStream:
-            try:
-                envDict = yaml.load(envStream)
-            except yaml.YAMLError as err:
-                logger.error('{} Invalid! Please review'.format(openFile))
-                raise err
-
-            envStream.seek(0)
-            fileLines = envStream.readlines()
-
-    except FileNotFoundError as err:
-        logger.error('Missing config YAML file! Check directory')
-        raise err
-
-    if envDict is None:
-        envDict = {}
-    return envDict, fileLines
+    updateKwargs = {
+        'UUID': mappingMeta['UUID'],
+        'FunctionName': configDict['function_name'],
+        'Enabled': mapping['Enabled'],
+        'BatchSize': mapping['BatchSize'],
+    }
+    client.update_event_source_mapping(**updateKwargs)
 
 
 if __name__ == '__main__':

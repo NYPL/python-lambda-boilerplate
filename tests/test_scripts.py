@@ -1,11 +1,10 @@
 import unittest
-from unittest.mock import patch, mock_open, call
+from unittest.mock import patch, mock_open, call, MagicMock
 import logging
-from yaml import YAMLError
 import json
 import sys
 
-from scripts.lambdaRun import main, setEnvVars, createEventMapping, loadEnvFile, createAWSClient  # noqa: E501
+from scripts.lambdaRun import main, setEnvVars, createEventMapping, updateEventMapping  # noqa: E501
 from helpers.errorHelpers import InvalidExecutionType
 
 # Disable logging while we are running tests
@@ -32,7 +31,7 @@ class TestScripts(unittest.TestCase):
     @patch('os.remove')
     def test_run_local(self, mock_rm, mock_run, mock_envVars):
         main()
-        mock_envVars.assert_called_once_with('development')
+        mock_envVars.assert_called_once_with('local')
         mock_run.assert_called_once()
         mock_rm.assert_called_once_with('run_config.yaml')
 
@@ -131,37 +130,6 @@ class TestScripts(unittest.TestCase):
         except IOError:
             pass
         self.assertRaises(IOError)
-
-    @patch('yaml.load', return_value={'testing': True})
-    def test_load_env_success(self, mock_yaml):
-        resDict, resLines = loadEnvFile('development', None)
-        self.assertTrue(resDict['testing'])
-
-    @patch('yaml.load', return_value={'testing': True})
-    def test_load_env_config_success(self, mock_yaml):
-        resDict, resLines = loadEnvFile('development', 'config/{}.yaml')
-        self.assertTrue(resDict['testing'])
-
-    @patch('yaml.load', side_effect={'testing': True})
-    def test_load_env_failure(self, mock_yaml):
-        try:
-            resDict, resLines = loadEnvFile('development', 'missing/{}.yaml')
-        except FileNotFoundError:
-            pass
-        self.assertRaises(FileNotFoundError)
-
-    @patch('yaml.load', return_value=None)
-    def test_load_empty_env(self, mock_yaml):
-        resDict, resLines = loadEnvFile('development', None)
-        self.assertEqual(resDict, {})
-
-    @patch('yaml.load', side_effect=YAMLError)
-    def test_read_env_failure(self, mock_yaml):
-        try:
-            resDict, resLines = loadEnvFile('development', 'config/{}.yaml')
-        except YAMLError:
-            pass
-        self.assertRaises(YAMLError)
 
     mockReturns = [
         ({
@@ -262,28 +230,26 @@ class TestScripts(unittest.TestCase):
 
         mock_env.assert_not_called()
 
-    @patch('boto3.client', return_value=True)
-    def test_create_client(self, mock_boto):
-        result = createAWSClient({
-            'region': 'test'
-        })
-        mock_boto.assert_called_once_with('lambda', region_name='test')
-        self.assertTrue(result)
-
-    @patch('boto3.client', return_value=True)
-    def test_create_with_access(self, mock_boto):
-        result = createAWSClient({
-            'region': 'test',
-            'aws_access_key_id': 1,
-            'aws_secret_access_key': 'secret'
-        })
-        mock_boto.assert_called_once_with(
-            'lambda',
-            region_name='test',
-            aws_access_key_id=1,
-            aws_secret_access_key='secret'
+    def test_update_mapping(self):
+        mock_client = MagicMock()
+        mock_client().list_event_source_mappings.return_value = {
+            'EventSourceMappings': [
+                {
+                    'UUID': 'XXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX',
+                }
+            ]
+        }
+        updateEventMapping(
+            mock_client,
+            {
+                'EventSourceArn': 'test:arn:000000000000',
+                'Enabled': True,
+                'BatchSize': 0
+            },
+            {
+                'function_name': 'test_function'
+            }
         )
-        self.assertTrue(result)
 
 
 if __name__ == '__main__':
