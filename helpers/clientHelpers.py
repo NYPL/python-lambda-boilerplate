@@ -8,7 +8,22 @@ logger = createLog('clientHelpers')
 
 
 def createAWSClient(service, configDict=None):
-
+    """Creates a boto3 client object for communicating with a specific AWS
+    service. This is always invoked by the lambda run/deployment scripts to
+    create a client to the Lambda service, but can also be invoked within the
+    Lambda function to connect to other AWS services.
+    
+    Arguments:
+        service {string} -- The AWS service to create a connection to.
+    
+    Keyword Arguments:
+        configDict {string} -- AWS Configuration details. If None/not provided
+        details will be loaded from default config.yaml file (default: {None})
+    
+    Returns:
+        [boto3.client] -- A client object that can be used to invoke various
+        services from the associated AWS service.
+    """
     if configDict is None:
         configDict, configLines = loadEnvFile(None, None)
 
@@ -33,6 +48,22 @@ def createAWSClient(service, configDict=None):
 
 
 def createEventMapping(runType):
+    """Creates an event mapping that connects the deployed Lambda function to
+    one or more event sources/triggers. This is optional but most functions
+    should have at least one event source. Different environments can have
+    different event sources configured.
+
+    Arguments:
+        runType {string} -- The environment the Lambda function is currently
+        being deployed in.
+
+    Raises:
+        JSONDecodeError: If the event source JSON file is malformed, this
+        will raise a JSON error as the script must be able to properly 
+        read this file for deployment.
+        IOError: If the even source JSON file cannot be read because it is 
+        missing or the script lacks permissions to open it. 
+    """
     logger.info('Creating event Source mappings for Lambda')
     try:
         with open('config/event_sources_{}.json'.format(runType)) as sources:
@@ -80,7 +111,15 @@ def createEventMapping(runType):
 
 
 def updateEventMapping(client, mapping, configDict):
+    """When the Lambda function exists with an event source in place, a
+    different boto3 service must be invoked to update the existing source.
 
+    Arguments:
+        client {boto3.client} -- A boto3 lambda client object.
+        mapping {dict} -- A dictionary containing the event source details.
+        configDict {dict} -- A dictionary containing the function's config
+        details.
+    """
     listSourceKwargs = {
         'EventSourceArn': mapping['EventSourceArn'],
         'FunctionName': configDict['function_name'],

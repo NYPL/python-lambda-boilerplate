@@ -10,15 +10,15 @@ from helpers.configHelpers import setEnvVars
 
 logger = createLog('runScripts')
 
-# This script is invoked by the Makefile in root to execute various
-# commands around a python lambda. This includes deployment, local invocations,
-# and tests/test coverage. It attempts to replicate some of the functionality
-# provided through node/package.json
-# H/T to Paul Beaudoin for the inspiration
-
 
 def main():
+    """Invoked by the makefile's arguments, controls the overall execution of
+    the Lambda function. h/t to nonword for inspiration to use a makefile.
 
+    Raises:
+        InvalidExecutionType: If the args do not contain a valid execution type
+        raise an error.
+    """
     if len(sys.argv) != 2:
         logger.warning('This script takes one, and only one, argument!')
         sys.exit(1)
@@ -53,7 +53,9 @@ def main():
 
     elif re.match(r'^build-(?:development|qa|production)', runType):
         env = runType.replace('build-', '')
-        logger.info('Building package for {} environment, will be in dist/'.format(env))  # noqa: E501
+        logger.info(
+            'Building package for {} environment, will be in dist/'.format(env)
+        )
         setEnvVars(env)
         subprocess.run([
             'lambda',
