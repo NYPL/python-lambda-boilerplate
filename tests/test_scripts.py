@@ -3,8 +3,15 @@ from unittest.mock import patch, mock_open, call, MagicMock
 import logging
 import json
 import sys
+from collections import ChainMap
 
-from scripts.lambdaRun import main, setEnvVars, createEventMapping, updateEventMapping  # noqa: E501
+from scripts.lambdaRun import (
+    main,
+    setEnvVars,
+    loadEnvVars,
+    createEventMapping,
+    updateEventMapping
+)
 from helpers.errorHelpers import InvalidExecutionType
 
 # Disable logging while we are running tests
@@ -61,68 +68,50 @@ class TestScripts(unittest.TestCase):
             pass
         self.assertRaises(SystemExit)
 
-    mockReturns = [
-        ({
+    mockReturns = ChainMap(
+        {
             'environment_variables': {
                 'test': 'world'
             }
-        }, ['region: Mesa Blanca', 'host: Rozelle']),
-        ({
-            'environment_variables': {
-                'test': 'hello',
-                'static': 'static'
-            }
-        }, ['region: Snowdream\n', 'host: Rozelle'])
-    ]
+        },
+        {}
+    )
 
-    @patch('scripts.lambdaRun.loadEnvFile', side_effect=mockReturns)
+    @patch('scripts.lambdaRun.loadEnvFile', side_effect=[
+        {'test1': 'hello'},
+        {'test2': 'world'}
+    ])
+    def test_load_env(self, mock_load):
+        testChain = loadEnvVars('test')
+        self.assertIsInstance(testChain, ChainMap)
+        self.assertEqual(testChain['test1'], 'hello')
+
+    @patch('scripts.lambdaRun.loadEnvVars', return_value=mockReturns)
     @patch('builtins.open', new_callable=mock_open, read_data='data')
     def test_envVar_success(self, mock_file, mock_env):
         setEnvVars('development')
-        envCalls = [
-            call('development', 'config/{}.yaml'),
-            call('development', None)
-        ]
-        mock_env.assert_has_calls(envCalls)
+        mock_env.assert_has_calls([call('development')])
 
-    @patch('scripts.lambdaRun.loadEnvFile', return_value=({}, None))
-    @patch('shutil.copyfile')
-    def test_missing_block(self, mock_copy, mock_env):
-        setEnvVars('development')
-        mock_env.assert_called_once()
-        mock_copy.assert_called_once_with('config.yaml', 'run_config.yaml')
-
-    mockReturns = [
-        ({
+    mockLoadReturn = ChainMap({
             'environment_variables': {
                 'test': 'world'
             }
-        }, None),
-        ({
+        },{
             'environment_variables': {
                 'jerry': 'hello'
             }
-        }, [
-            'region: candyland\n',
-            '# === START_ENV_VARIABLES ===\n',
-            'environment_variables:\n',
-            'jerry: hello\n',
-            '# === END_ENV_VARIABLES ==='
-            ]
-        )
-    ]
+        })
 
-    @patch('scripts.lambdaRun.loadEnvFile', side_effect=mockReturns)
+    @patch('scripts.lambdaRun.loadEnvVars', return_value=mockLoadReturn)
     def test_envVar_parsing(self, mock_env):
         m = mock_open()
         with patch('builtins.open', m, create=True):
             setEnvVars('development')
+            mock_env.assert_called_once()
             confHandle = m()
-            confHandle.write.assert_has_calls([
-                call('environment_variables:\n  jerry: hello\n  test: world\n')
-            ])
+            confHandle.write.assert_called()
 
-    @patch('scripts.lambdaRun.loadEnvFile', side_effect=mockReturns)
+    @patch('scripts.lambdaRun.loadEnvVars', return_value=mockLoadReturn)
     @patch('builtins.open', side_effect=IOError())
     def test_envVar_permissions(self, mock_file, mock_env):
         try:
@@ -131,24 +120,18 @@ class TestScripts(unittest.TestCase):
             pass
         self.assertRaises(IOError)
 
-    mockReturns = [
-        ({
+    mockReturns = ChainMap(
+        {
             'function_name': 'tester',
             'environment_variables': {
                 'jerry': 'hello'
             }
-        }, [
-            'region: candyland\n',
-            '# === START_ENV_VARIABLES ===\n',
-            'environment_variables:\n',
-            'jerry: hello\n',
-            '# === END_ENV_VARIABLES ==='
-            ]
-        )
-    ]
+        },
+        {}
+    )
 
     @patch('scripts.lambdaRun.createAWSClient')
-    @patch('scripts.lambdaRun.loadEnvFile', side_effect=mockReturns)
+    @patch('scripts.lambdaRun.loadEnvVars', return_value={'function_name': 'tester'})
     def test_create_event_mapping(self, mock_env, mock_client):
         jsonD = ('{"EventSourceMappings": [{"EventSourceArn": "test",'
                  '"Enabled": "test", "BatchSize": "test",'
@@ -157,7 +140,7 @@ class TestScripts(unittest.TestCase):
         with patch('builtins.open', mock_open(read_data=jsonD), create=True):
             createEventMapping('development')
 
-        mock_env.assert_called_once_with('development', None)
+        mock_env.assert_called_once_with('development')
         mock_client.assert_called_once()
         mock_client().create_event_source_mapping.assert_has_calls([
             call(
@@ -170,7 +153,7 @@ class TestScripts(unittest.TestCase):
         ])
 
     @patch('scripts.lambdaRun.createAWSClient')
-    @patch('scripts.lambdaRun.loadEnvFile', side_effect=mockReturns)
+    @patch('scripts.lambdaRun.loadEnvVars', return_value={'function_name': 'tester'})
     def test_at_lastest_position_event(self, mock_env, mock_client):
         jsonD = ('{"EventSourceMappings": [{"EventSourceArn": "test",'
                  '"Enabled": "test", "BatchSize": "test",'
@@ -179,7 +162,7 @@ class TestScripts(unittest.TestCase):
         with patch('builtins.open', mock_open(read_data=jsonD), create=True):
             createEventMapping('development')
 
-        mock_env.assert_called_once_with('development', None)
+        mock_env.assert_called_once_with('development')
         mock_client.assert_called_once()
         mock_client().create_event_source_mapping.assert_has_calls([
             call(
