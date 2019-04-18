@@ -19,7 +19,7 @@ def loadEnvFile(runType, fileString):
     try:
         with open(openFile) as envStream:
             try:
-                envDict = yaml.load(envStream)
+                envDict = yaml.full_load(envStream)
             except yaml.YAMLError as err:
                 logger.error('{} Invalid! Please review'.format(openFile))
                 raise err
