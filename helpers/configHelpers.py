@@ -1,4 +1,6 @@
 import yaml
+from collections import ChainMap
+
 
 from helpers.logHelpers import createLog
 
@@ -28,5 +30,34 @@ def loadEnvFile(runType, fileString):
 
     if envDict is None:
         return {}
-    
+
     return envDict
+
+
+def loadEnvVars(runType):
+    # Load env variables from relevant .yaml file
+    envDict = loadEnvFile(runType, 'config/{}.yaml')
+
+    # Overwrite/add any vars in the core config.yaml file
+    configDict = loadEnvFile(runType, None)
+
+    combinedConfig = ChainMap(envDict, configDict)
+
+    return combinedConfig
+
+
+def setEnvVars(runType):
+
+    envVars = loadEnvVars(runType)
+
+    try:
+        with open('run_config.yaml', 'w') as newConfig:
+            yaml.dump(
+                dict(envVars),
+                newConfig,
+                default_flow_style=False
+            )
+    except IOError as err:
+        logger.error(('Script lacks necessary permissions, '
+                      'ensure user has permission to write to directory'))
+        raise err
