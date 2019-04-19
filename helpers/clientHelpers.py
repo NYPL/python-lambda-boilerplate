@@ -59,10 +59,10 @@ def createEventMapping(runType):
 
     Raises:
         JSONDecodeError: If the event source JSON file is malformed, this
-        will raise a JSON error as the script must be able to properly 
+        will raise a JSON error as the script must be able to properly
         read this file for deployment.
-        IOError: If the even source JSON file cannot be read because it is 
-        missing or the script lacks permissions to open it. 
+        IOError: If the even source JSON file cannot be read because it is
+        missing or the script lacks permissions to open it.
     """
     logger.info('Creating event Source mappings for Lambda')
     try:
@@ -91,16 +91,9 @@ def createEventMapping(runType):
         logger.debug('Adding event source mapping for function')
 
         createKwargs = {
-            'EventSourceArn': mapping['EventSourceArn'],
-            'FunctionName': configDict['function_name'],
-            'Enabled': mapping['Enabled'],
-            'BatchSize': mapping['BatchSize'],
+            key: item for key, item in mapping.items()
         }
-
-        if 'StartingPosition' in mapping:
-            createKwargs['StartingPosition'] = mapping['StartingPosition']
-            if mapping['StartingPosition'] == 'AT_TIMESTAMP':
-                createKwargs['StartingPositionTimestamp'] = mapping['StartingPositionTimestamp']  # noqa: E501
+        createKwargs['FunctionName'] = configDict['function_name']
 
         try:
             lambdaClient.create_event_source_mapping(**createKwargs)
@@ -129,9 +122,9 @@ def updateEventMapping(client, mapping, configDict):
     mappingMeta = sourceMappings['EventSourceMappings'][0]
 
     updateKwargs = {
-        'UUID': mappingMeta['UUID'],
-        'FunctionName': configDict['function_name'],
-        'Enabled': mapping['Enabled'],
-        'BatchSize': mapping['BatchSize'],
+        key: item for key, item in mapping.items()
     }
+    updateKwargs['UUID'] = mappingMeta['UUID']
+    updateKwargs['FunctionName'] = configDict['function_name']
+
     client.update_event_source_mapping(**updateKwargs)
