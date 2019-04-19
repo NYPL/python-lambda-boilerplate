@@ -38,7 +38,7 @@ class TestConfig(unittest.TestCase):
         except YAMLError:
             pass
         self.assertRaises(YAMLError)
-    
+
     mockReturns = ChainMap(
         {
             'environment_variables': {
@@ -67,7 +67,7 @@ class TestConfig(unittest.TestCase):
             'environment_variables': {
                 'test': 'world'
             }
-        },{
+        }, {
             'environment_variables': {
                 'jerry': 'hello'
             }

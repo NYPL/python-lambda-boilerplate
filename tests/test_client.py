@@ -34,7 +34,10 @@ class TestClient(unittest.TestCase):
         )
         self.assertTrue(result)
 
-    @patch('helpers.clientHelpers.loadEnvFile', return_value=({'region': 'test'}, None))  # noqa E501
+    @patch(
+        'helpers.clientHelpers.loadEnvFile',
+        return_value=({'region': 'test'}, None)
+    )
     @patch('boto3.client', return_value=True)
     def test_create_with_load_env(self, mock_boto, mock_env):
         result = createAWSClient('fakeService', None)
@@ -43,7 +46,10 @@ class TestClient(unittest.TestCase):
         self.assertTrue(result)
 
     @patch('helpers.clientHelpers.createAWSClient')
-    @patch('helpers.clientHelpers.loadEnvVars', return_value={'function_name': 'tester'})
+    @patch(
+        'helpers.clientHelpers.loadEnvVars',
+        return_value={'function_name': 'tester'}
+    )
     def test_create_event_mapping(self, mock_env, mock_client):
         jsonD = ('{"EventSourceMappings": [{"EventSourceArn": "test",'
                  '"Enabled": "test", "BatchSize": "test",'
@@ -65,7 +71,10 @@ class TestClient(unittest.TestCase):
         ])
 
     @patch('helpers.clientHelpers.createAWSClient')
-    @patch('helpers.clientHelpers.loadEnvVars', return_value={'function_name': 'tester'})
+    @patch(
+        'helpers.clientHelpers.loadEnvVars',
+        return_value={'function_name': 'tester'}
+    )
     def test_at_lastest_position_event(self, mock_env, mock_client):
         jsonD = ('{"EventSourceMappings": [{"EventSourceArn": "test",'
                  '"Enabled": "test", "BatchSize": "test",'

@@ -12,14 +12,14 @@ def createAWSClient(service, configDict=None):
     service. This is always invoked by the lambda run/deployment scripts to
     create a client to the Lambda service, but can also be invoked within the
     Lambda function to connect to other AWS services.
-    
+
     Arguments:
         service {string} -- The AWS service to create a connection to.
-    
+
     Keyword Arguments:
         configDict {string} -- AWS Configuration details. If None/not provided
         details will be loaded from default config.yaml file (default: {None})
-    
+
     Returns:
         [boto3.client] -- A client object that can be used to invoke various
         services from the associated AWS service.

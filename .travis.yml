@@ -7,7 +7,7 @@ install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
 before_script: cp config.yaml.sample config.yaml
-script: make test
+script: make lint && make test
 #
 # The travis configuration beloy will deploy this lambda to the function defined
 # in your config.yaml file. This behavior can be defined for any of the

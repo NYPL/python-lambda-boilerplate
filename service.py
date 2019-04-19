@@ -1,4 +1,3 @@
-from helpers.errorHelpers import NoRecordsReceived
 from helpers.logHelpers import createLog
 
 # Logger can be passed name of current module
@@ -8,7 +7,7 @@ logger = createLog('handler')
 
 def handler(event, context):
     """The central handler function called when the Lambda function is invoked.
-    
+
     Arguments:
         event {dict} -- Dictionary containing contents of the event that
         invoked the function, primarily the payload of data to be processed.
@@ -17,7 +16,7 @@ def handler(event, context):
 
     Returns:
         [string|dict] -- An output object that does not impact the effect of
-        the function but which is reflected in CloudWatch 
+        the function but which is reflected in CloudWatch
     """
     logger.info('Starting Lambda Execution')
 
