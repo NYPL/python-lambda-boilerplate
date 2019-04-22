@@ -1,7 +1,6 @@
 import unittest
 from yaml import YAMLError
 from unittest.mock import patch, mock_open, call
-from collections import ChainMap
 
 from helpers.configHelpers import loadEnvFile, setEnvVars, loadEnvVars
 
@@ -39,23 +38,20 @@ class TestConfig(unittest.TestCase):
             pass
         self.assertRaises(YAMLError)
 
-    mockReturns = ChainMap(
-        {
-            'environment_variables': {
-                'test': 'world'
-            }
-        },
-        {}
-    )
+    mockReturns = {
+        **{},
+        **{'environment_variables': {'test': 'world'}}
+    }
 
     @patch('helpers.configHelpers.loadEnvFile', side_effect=[
-        {'test1': 'hello'},
+        {'test1': 'hello', 'test2': 'jerry'},
         {'test2': 'world'}
     ])
     def test_load_env(self, mock_load):
-        testChain = loadEnvVars('test')
-        self.assertIsInstance(testChain, ChainMap)
-        self.assertEqual(testChain['test1'], 'hello')
+        testDict = loadEnvVars('test')
+        self.assertIsInstance(testDict, dict)
+        self.assertEqual(testDict['test1'], 'hello')
+        self.assertEqual(testDict['test2'], 'jerry')
 
     @patch('helpers.configHelpers.loadEnvVars', return_value=mockReturns)
     @patch('builtins.open', new_callable=mock_open, read_data='data')
@@ -63,15 +59,10 @@ class TestConfig(unittest.TestCase):
         setEnvVars('development')
         mock_env.assert_has_calls([call('development')])
 
-    mockLoadReturn = ChainMap({
-            'environment_variables': {
-                'test': 'world'
-            }
-        }, {
-            'environment_variables': {
-                'jerry': 'hello'
-            }
-        })
+    mockLoadReturn = {
+            **{'environment_variables': {'jerry': 'hello'}},
+            **{'environment_variables': {'test': 'world'}}
+        }
 
     @patch('helpers.configHelpers.loadEnvVars', return_value=mockLoadReturn)
     def test_envVar_parsing(self, mock_env):
@@ -90,13 +81,3 @@ class TestConfig(unittest.TestCase):
         except IOError:
             pass
         self.assertRaises(IOError)
-
-    mockReturns = ChainMap(
-        {
-            'function_name': 'tester',
-            'environment_variables': {
-                'jerry': 'hello'
-            }
-        },
-        {}
-    )

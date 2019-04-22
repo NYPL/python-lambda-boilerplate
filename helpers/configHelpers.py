@@ -1,6 +1,4 @@
 import yaml
-from collections import ChainMap
-
 
 from helpers.logHelpers import createLog
 
@@ -55,18 +53,21 @@ def loadEnvVars(runType):
         runType {string} -- The current environment.
 
     Returns:
-        ChainMap -- A ChainMap object combining the dictionaries returned from
-        the default config.yaml file (required) and an environment-specific
-        file (optional). The environment-specific details will override any
-        settings in the default file.
+        dict -- A dictionary combining the values from the default config.yaml
+        file (required) and an environment-specific file (optional). The
+        environment-specific details will override any settings in the default
+        file.
     """
-    # Load env variables from relevant .yaml file
-    envDict = loadEnvFile(runType, 'config/{}.yaml')
+    # Load base config settings/variables from the root config.yaml file
+    baseConfigDict = loadEnvFile(runType, None)
 
-    # Overwrite/add any vars in the core config.yaml file
-    configDict = loadEnvFile(runType, None)
+    # Load additional settings from env-specific file. These will overwrite
+    # any matching settings/variables from the config.yaml file
+    currentEnvDict = loadEnvFile(runType, 'config/{}.yaml')
 
-    combinedConfig = ChainMap(envDict, configDict)
+    # Merge the loaded dicts, overwriting any matching settings with the values
+    # from the env-specific file.
+    combinedConfig = {**currentEnvDict, **baseConfigDict}
 
     return combinedConfig
 
@@ -87,7 +88,7 @@ def setEnvVars(runType):
     try:
         with open('run_config.yaml', 'w') as newConfig:
             yaml.dump(
-                dict(envVars),
+                envVars,
                 newConfig,
                 default_flow_style=False
             )
