@@ -13,7 +13,7 @@ logger = createLog('runScripts')
 def main():
     """Invoked by the makefile's arguments, controls the overall execution of
     the Lambda function. h/t to nonword for inspiration to use a makefile."""
-    print(sys.argv)
+
     if len(sys.argv) != 2:
         logger.warning('This script takes one, and only one, argument!')
         sys.exit(1)
