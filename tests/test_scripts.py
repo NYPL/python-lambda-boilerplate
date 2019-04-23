@@ -68,7 +68,7 @@ class TestScripts(unittest.TestCase):
     def test_run_function(self, mock_run):
         runFunc('test')
         mock_run.assert_called_once_with(
-            'local', 
+            'local',
             ['invoke', '-v', '--config-file', 'run_config.yaml']
         )
 

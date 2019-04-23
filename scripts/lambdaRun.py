@@ -113,10 +113,10 @@ def runProcess(runType, argList):
         argList {array} -- An array of command line arguments that dictate
         the specific type of invocation being made to `python-lambda`
     """
-    setEnvVars(runType) # Creates the run_config.yaml file
+    setEnvVars(runType)  # Creates the run_config.yaml file
     processArgs = ['lambda']
     processArgs.extend(argList)
-    subprocess.run(processArgs) # Executes the actual command
+    subprocess.run(processArgs)  # Executes the actual command
 
 
 if __name__ == '__main__':
