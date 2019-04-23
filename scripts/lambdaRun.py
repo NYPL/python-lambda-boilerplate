@@ -1,172 +1,122 @@
 import subprocess
 import sys
 import os
-import re
-import yaml
-import json
-
-from collections import ChainMap
 
 from helpers.logHelpers import createLog
 from helpers.errorHelpers import InvalidExecutionType
-from helpers.configHelpers import loadEnvFile
-from helpers.clientHelpers import createAWSClient
+from helpers.clientHelpers import createEventMapping
+from helpers.configHelpers import setEnvVars
 
 logger = createLog('runScripts')
 
-# This script is invoked by the Makefile in root to execute various
-# commands around a python lambda. This includes deployment, local invocations,
-# and tests/test coverage. It attempts to replicate some of the functionality
-# provided through node/package.json
-# H/T to Paul Beaudoin for the inspiration
-
 
 def main():
+    """Invoked by the makefile's arguments, controls the overall execution of
+    the Lambda function. h/t to nonword for inspiration to use a makefile."""
 
     if len(sys.argv) != 2:
         logger.warning('This script takes one, and only one, argument!')
         sys.exit(1)
+
     runType = sys.argv[1]
 
-    if re.match(r'^(?:local|development|qa|production)', runType):
-        logger.info('Deploying lambda to {} environment'.format(runType))
-        setEnvVars(runType)
-        subprocess.run([
-            'lambda',
-            'deploy',
-            '--config-file',
-            'run_config.yaml',
-            '--requirements',
-            'requirements.txt'
-        ])
-        os.remove('run_config.yaml')
-        createEventMapping(runType)
-
-    elif re.match(r'^run-local', runType):
-        logger.info('Running test locally with development environment')
-        env = 'local'
-        setEnvVars(env)
-        subprocess.run([
-            'lambda',
-            'invoke',
-            '-v',
-            '--config-file',
-            'run_config.yaml'
-        ])
-        os.remove('run_config.yaml')
-
-    elif re.match(r'^build-(?:development|qa|production)', runType):
-        env = runType.replace('build-', '')
-        logger.info('Building package for {} environment, will be in dist/'.format(env))  # noqa: E501
-        setEnvVars(env)
-        subprocess.run([
-            'lambda',
-            'build',
-            '--requirements',
-            'requirements.txt',
-            '--config-file',
-            'run_config.yaml'
-        ])
-        os.remove('run_config.yaml')
-
-    else:
-        logger.error('Execution type not recognized! {}'.format(runType))
-        raise InvalidExecutionType('{} is not a valid command'.format(runType))
-
-
-def loadEnvVars(runType):
-    # Load env variables from relevant .yaml file
-    envDict = loadEnvFile(runType, 'config/{}.yaml')
-
-    # Overwrite/add any vars in the core config.yaml file
-    configDict = loadEnvFile(runType, None)
-
-    combinedConfig = ChainMap(envDict, configDict)
-
-    return combinedConfig
-
-
-def setEnvVars(runType):
-
-    envVars = loadEnvVars(runType)
-
-    try:
-        with open('run_config.yaml', 'w') as newConfig:
-            yaml.dump(
-                dict(envVars),
-                newConfig,
-                default_flow_style=False
-            )
-    except IOError as err:
-        logger.error(('Script lacks necessary permissions, '
-                      'ensure user has permission to write to directory'))
-        raise err
-
-
-def createEventMapping(runType):
-    logger.info('Creating event Source mappings for Lambda')
-    try:
-        with open('config/event_sources_{}.json'.format(runType)) as sources:
-            try:
-                eventMappings = json.load(sources)
-            except json.decoder.JSONDecodeError as err:
-                logger.error('Unable to parse JSON file')
-                raise err
-    except FileNotFoundError:
-        logger.info('No Event Source mapping provided')
-        return
-    except IOError as err:
-        logger.error('Unable to open JSON file')
-        raise err
-
-    if len(eventMappings['EventSourceMappings']) < 1:
-        logger.info('No event sources defined')
-        return
-
-    configDict = loadEnvVars(runType)
-
-    lambdaClient = createAWSClient('lambda', configDict)
-
-    for mapping in eventMappings['EventSourceMappings']:
-        logger.debug('Adding event source mapping for function')
-
-        createKwargs = {
-            'EventSourceArn': mapping['EventSourceArn'],
-            'FunctionName': configDict['function_name'],
-            'Enabled': mapping['Enabled'],
-            'BatchSize': mapping['BatchSize'],
-        }
-
-        if 'StartingPosition' in mapping:
-            createKwargs['StartingPosition'] = mapping['StartingPosition']
-            if mapping['StartingPosition'] == 'AT_TIMESTAMP':
-                createKwargs['StartingPositionTimestamp'] = mapping['StartingPositionTimestamp']  # noqa: E50
-
-        try:
-            lambdaClient.create_event_source_mapping(**createKwargs)
-        except lambdaClient.exceptions.ResourceConflictException as err:
-            logger.info('Event Mapping already exists, update')
-            logger.debug(err)
-            updateEventMapping(lambdaClient, mapping, configDict)
-
-
-def updateEventMapping(client, mapping, configDict):
-
-    listSourceKwargs = {
-        'EventSourceArn': mapping['EventSourceArn'],
-        'FunctionName': configDict['function_name'],
-        'MaxItems': 1
+    # Map the possible valid execution commands.
+    runTypeFuncs = {
+        'local': deployFunc,
+        'development': deployFunc,
+        'qa': deployFunc,
+        'production': deployFunc,
+        'run-local': runFunc,
+        'build-development': buildFunc,
+        'build-qa': buildFunc,
+        'build-production': buildFunc
     }
-    sourceMappings = client.list_event_source_mappings(**listSourceKwargs)
-    mappingMeta = sourceMappings['EventSourceMappings'][0]
 
-    updateKwargs = {
-        'UUID': mappingMeta['UUID'],
-        'FunctionName': configDict['function_name'],
-        'Enabled': mapping['Enabled'],
-        'BatchSize': mapping['BatchSize'],
-    }
-    client.update_event_source_mapping(**updateKwargs)
+    # Execute desired function. If not found, raise an error.
+    runTypeFuncs.get(runType, errFunc)(runType)
+
+    # Remove computed configuration file. This is only used during runtime.
+    os.remove('run_config.yaml')
+
+
+def deployFunc(runType):
+    """Deploys the current Lambda function to the environment specificied
+    in the current configuration file.
+
+    Arguments:
+        runType {string} -- The environment to deploy the function to. Should
+        be one of [local|development|qa|production]
+    """
+    logger.info('Deploying lambda to {} environment'.format(runType))
+    runProcess(runType, [
+        'deploy',
+        '--config-file',
+        'run_config.yaml',
+        '--requirements',
+        'requirements.txt'
+    ])
+    createEventMapping(runType)
+
+
+def buildFunc(runType):
+    """Builds a deployment package that can be uploaded to AWS or a testing
+    environment.
+
+    Arguments:
+        runType {string} -- The environment to build the function for. Should
+        be one of [development|qa|production]. (Local builds are unnecessary as
+        the code can be executed from the development directory.)
+    """
+    buildEnv = runType.replace('build-', '')
+    logger.info(
+        'Building package for {}, will be in dist/'.format(buildEnv)
+    )
+    runProcess(buildEnv, [
+        'build',
+        '--requirements',
+        'requirements.txt',
+        '--config-file',
+        'run_config.yaml'
+    ])
+
+
+def runFunc(runType):
+    """Invokes the lambda function with currently configured local settings.
+
+    Arguments:
+        runType {string} -- The environment variables to execute the function
+        with, should always be local.
+    """
+    logger.info('Running test locally with development environment')
+    runProcess('local', ['invoke', '-v', '--config-file', 'run_config.yaml'])
+
+
+def errFunc(runType):
+    """Raises an error when an unknown command is received.
+
+    Arguments:
+        runType {string} -- The unknown command received by this function,
+
+    Raises:
+        InvalidExecutionType: Indicates that this module cannot execute the
+        requested command.
+    """
+    logger.error('Execution type not recognized! {}'.format(runType))
+    raise InvalidExecutionType('{} is not a valid command'.format(runType))
+
+
+def runProcess(runType, argList):
+    """Executes the requested command through a subprocess call to the CLI.
+
+    Arguments:
+        runType {string} -- The current environment to load settings for.
+        argList {array} -- An array of command line arguments that dictate
+        the specific type of invocation being made to `python-lambda`
+    """
+    setEnvVars(runType)  # Creates the run_config.yaml file
+    processArgs = ['lambda']
+    processArgs.extend(argList)
+    subprocess.run(processArgs)  # Executes the actual command
 
 
 if __name__ == '__main__':
