@@ -6,10 +6,12 @@ python:
 install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
+# IMPORTANT: Remove the following line when implementing this package, otherwise
+# your config file will not be set when running tests/deploying from CI.
 before_script: cp config.yaml.sample config.yaml
-script: make test
+script: make lint && make test
 #
-# The travis configuration beloy will deploy this lambda to the function defined
+# The travis configuration deploy will deploy this lambda to the function defined
 # in your config.yaml file. This behavior can be defined for any of the
 # development/qa/production environments.
 #
