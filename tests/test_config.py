@@ -1,8 +1,16 @@
 import unittest
+from base64 import b64encode
+from botocore.exceptions import ClientError
+import os
 from yaml import YAMLError
 from unittest.mock import patch, mock_open, call
 
-from helpers.configHelpers import loadEnvFile, setEnvVars, loadEnvVars
+from helpers.configHelpers import (
+    loadEnvFile,
+    setEnvVars,
+    loadEnvVars,
+    decryptEnvVar
+)
 
 
 class TestConfig(unittest.TestCase):
@@ -81,3 +89,35 @@ class TestConfig(unittest.TestCase):
         except IOError:
             pass
         self.assertRaises(IOError)
+
+    @patch.dict(
+        os.environ,
+        {'testing': b64encode('testing'.encode('utf-8')).decode('utf-8')}
+    )
+    @patch('helpers.configHelpers.boto3')
+    def test_env_decryptor_success(self, mock_boto):
+        mock_boto.client().decrypt.return_value = {
+            'Plaintext': 'testing'.encode('utf-8')
+        }
+        outEnv = decryptEnvVar('testing')
+        self.assertEqual(outEnv, 'testing')
+
+    @patch.dict(os.environ, {'testing': 'testing'})
+    @patch('helpers.configHelpers.boto3')
+    def test_env_decryptor_non_encoded(self, mock_boto):
+        mock_boto.client().decrypt.return_value = {'Plaintext': 'testing'}
+        outEnv = decryptEnvVar('testing')
+        self.assertEqual(outEnv, 'testing')
+
+    @patch.dict(
+        os.environ,
+        {'testing': b64encode('testing'.encode('utf-8')).decode('utf-8')}
+    )
+    @patch('helpers.configHelpers.boto3')
+    def test_env_decryptor_boto_error(self, mock_boto):
+        mock_boto.client().decrypt.side_effect = ClientError
+        outEnv = decryptEnvVar('testing')
+        self.assertEqual(
+            outEnv,
+            b64encode('testing'.encode('utf-8')).decode('utf-8')
+        )
