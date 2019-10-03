@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/NYPL/python-lambda-boilerplate.svg?branch=master)](https://travis-ci.com/NYPL/python-lambda-boilerplate)
 
-
+[![GitHub version](https://badge.fury.io/gh/nypl%2Fpython-lambda-boilerplate.svg)](https://badge.fury.io/gh/nypl%2Fpython-lambda-boilerplate)
 
 A simple boilerplate/starter for creating AWS Lambdas in python (python3.3+). This relies on the [python-lambda](https://github.com/nficano/python-lambda) module for deployment and managing environment variables. It allows you to run local tests and automatically deploy code to AWS based on local variables. This was inspired and largely guided by the [node-lambda-boilerplate](https://github.com/nypl/node-lambda-boilerplate) repository
 
