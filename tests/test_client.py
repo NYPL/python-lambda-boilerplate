@@ -36,7 +36,7 @@ class TestClient(unittest.TestCase):
 
     @patch(
         'helpers.clientHelpers.loadEnvFile',
-        return_value=({'region': 'test'}, None)
+        return_value=({'region': 'test'})
     )
     @patch('boto3.client', return_value=True)
     def test_create_with_load_env(self, mock_boto, mock_env):

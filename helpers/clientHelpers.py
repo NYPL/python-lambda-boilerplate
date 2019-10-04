@@ -25,7 +25,7 @@ def createAWSClient(service, configDict=None):
         services from the associated AWS service.
     """
     if configDict is None:
-        configDict, configLines = loadEnvFile(None, None)
+        configDict = loadEnvFile(None, None)
 
     clientKwargs = {
         'region_name': configDict['region']

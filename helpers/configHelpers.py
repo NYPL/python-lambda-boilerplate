@@ -72,7 +72,7 @@ def loadEnvVars(runType):
 
     # Merge the loaded dicts, overwriting any matching settings with the values
     # from the env-specific file.
-    combinedConfig = {**currentEnvDict, **baseConfigDict}
+    combinedConfig = {**baseConfigDict, **currentEnvDict}
 
     return combinedConfig
 
