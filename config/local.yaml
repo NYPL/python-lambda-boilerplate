@@ -1,0 +1,7 @@
+# Uncomment the below/add additional env variables to add them to the lambda
+runtime: python3.7
+
+# === ENVIRONMENT_VARIABLES ===
+environment_variables:
+    LOG_LEVEL: debug
+    TESTING: HELLO, JERRY
