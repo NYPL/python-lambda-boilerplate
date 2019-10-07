@@ -59,7 +59,7 @@ class TestConfig(unittest.TestCase):
         testDict = loadEnvVars('test')
         self.assertIsInstance(testDict, dict)
         self.assertEqual(testDict['test1'], 'hello')
-        self.assertEqual(testDict['test2'], 'jerry')
+        self.assertEqual(testDict['test2'], 'world')
 
     @patch('helpers.configHelpers.loadEnvVars', return_value=mockReturns)
     @patch('builtins.open', new_callable=mock_open, read_data='data')
