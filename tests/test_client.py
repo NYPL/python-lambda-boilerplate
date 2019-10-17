@@ -136,7 +136,7 @@ class TestClient(unittest.TestCase):
 
     def test_update_mapping(self):
         mock_client = MagicMock()
-        mock_client().list_event_source_mappings.return_value = {
+        mock_client.list_event_source_mappings.return_value = {
             'EventSourceMappings': [
                 {
                     'UUID': 'XXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX',
@@ -154,3 +154,9 @@ class TestClient(unittest.TestCase):
                 'function_name': 'test_function'
             }
         )
+        mock_client.update_event_source_mapping.assert_called_once_with(**{
+            'Enabled': True,
+            'BatchSize': 0,
+            'FunctionName': 'test_function',
+            'UUID': 'XXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
+        })

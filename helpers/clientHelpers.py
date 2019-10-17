@@ -114,7 +114,7 @@ def updateEventMapping(client, mapping, configDict):
         details.
     """
     listSourceKwargs = {
-        'EventSourceArn': mapping['EventSourceArn'],
+        'EventSourceArn': mapping.pop('EventSourceArn'),
         'FunctionName': configDict['function_name'],
         'MaxItems': 1
     }
